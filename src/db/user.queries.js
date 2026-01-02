@@ -14,3 +14,12 @@ export const findUserByEmail=async(email)=>{
 
     return rows[0]    
 }
+
+export const updateRefreshToken=async(userId,refreshToken)=>{
+    await pool.query(`UPDATE users SET refresh_token=$1,updated_at=now() where id=$2`,[refreshToken,userId])
+}
+
+export const findUserById=async(userId)=>{
+    const {rows}=await pool.query(`SELECT * FROM users where id=$1`,[userId])
+    return rows[0]
+}

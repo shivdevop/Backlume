@@ -1,7 +1,7 @@
 import { success,error } from "../utils/response.js"
-import { createUser,findUserByEmail } from "../db/user.queries.js"
+import { createUser,findUserByEmail, updateRefreshToken, findUserById } from "../db/user.queries.js"
 import brcypt from "bcrypt"
-import { generateToken } from "../utils/jwt.js"
+import { generateToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
 
 const SALT_ROUNDS=6
 
@@ -49,11 +49,25 @@ export const login=async(req,res)=>{
         email:existingUser.email,
     })
 
+    const refreshToken=signRefreshToken({
+        id:existingUser.id
+    })
+    
+    //we will store the refresh token in the database
+    await updateRefreshToken(existingUser.id,refreshToken)
+
+    //now we will get the user from the database again to get the updated user data
+    const newUser=await findUserById(existingUser.id)
+
+    if(!newUser){
+        return error(res,"Failed to get user",500)
+    }
 
     //password valid then lets return response, jwt token we will implement later 
     return success(res,{
-        user:existingUser,
-        token
+        user:newUser,
+        accessToken:token,
+        refreshToken:refreshToken
     })
 
 }
@@ -64,4 +78,55 @@ export const getUser=async(req,res)=>{
         email:req.user.email,
     }
     return success(res,targetuser)
+}
+
+
+export const refreshSession=async(req,res)=>{
+    try {
+        const {refreshToken}=req.body
+
+        if(!refreshToken){
+            return error(res,"Refresh token is required",400)
+        }
+    
+        const decoded=verifyRefreshToken(refreshToken)
+        const user=await findUserById(decoded.id)
+    
+        if(!user || user.refresh_token !==refreshToken){
+            return error(res,"Invalid refresh token",401)
+        }
+    
+        const newAccessToken=generateToken({
+            id:user.id,
+            email:user.email
+        })
+
+        return success(res,{
+            user:{
+                id:user.id,
+                email:user.email
+            },
+            accessToken:newAccessToken
+        })
+        
+    } catch (err) {
+        return error(res,err.message,401)
+    }
+    
+}
+
+export const logout=async(req,res)=>{
+
+    try {
+        //user should be logged in and authenticated to log out 
+        const userId=req.user.id
+        await updateRefreshToken(userId,null)
+    
+        return success(res,{
+            message:"Logged out successfully"
+        })
+    } catch (err) {
+        return error(res,err.message,500)
+    }
+
 }
