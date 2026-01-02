@@ -10,14 +10,14 @@ export const signup =async(req,res)=>{
 
     // we will try to find if the user already exists
     const {email,password}=req.body
-    const existingUser=findUserByEmail(email)
+    const existingUser=await findUserByEmail(email)
     if(existingUser){
         return error(res,"User already exists",400)
     }
 
     //if user doesnt exist, we create a new user .. first hash the password 
     const hashedPassword=await brcypt.hash(password,SALT_ROUNDS)
-    const newUser=createUser(email,hashedPassword)
+    const newUser=await createUser(email,hashedPassword)
     if(!newUser){
         return error(res,"Failed to create user",500)
     }
@@ -30,7 +30,8 @@ export const login=async(req,res)=>{
 
     //first find if the user exist 
    const {email,password}=req.body
-    const existingUser=findUserByEmail(email)
+   console.log(email,password)
+    const existingUser=await findUserByEmail(email)
     if(!existingUser){
         return error(res,"User not found",404)
     }
