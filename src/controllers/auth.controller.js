@@ -1,6 +1,7 @@
 import { success,error } from "../utils/response.js"
 import { createUser,findUserByEmail } from "../db/user.queries.js"
 import brcypt from "bcrypt"
+import { generateToken } from "../utils/jwt.js"
 
 const SALT_ROUNDS=6
 
@@ -42,8 +43,25 @@ export const login=async(req,res)=>{
         return error(res,"Invalid password",401)
     }
 
+    //if password is valid, we will generate a jwt token and send it to user 
+    const token=generateToken({
+        id:existingUser.id,
+        email:existingUser.email,
+    })
+
+
     //password valid then lets return response, jwt token we will implement later 
-    return success(res,existingUser)
+    return success(res,{
+        user:existingUser,
+        token
+    })
 
 }
 
+export const getUser=async(req,res)=>{
+    const targetuser={
+        id:req.user.id,
+        email:req.user.email,
+    }
+    return success(res,targetuser)
+}
