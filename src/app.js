@@ -1,4 +1,5 @@
 import express from "express"
+import authRoutes from "./routes/auth.route.js"
 
 const app=express()
 
@@ -11,5 +12,7 @@ app.get("/health",(req,res)=>{
         service:"backlume"
     })
 })
+
+app.use("/api/auth",authRoutes)
 
 export default app
