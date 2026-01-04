@@ -3,15 +3,15 @@ import { signup,login,getUser,refreshSession,logout } from "../../controllers/au
 import {signupSchema,loginSchema} from "../../modules/auth/auth.validator.js"
 import { ValidateSchema } from "../../middlewares/inputValidator.js"
 import { authenticateUser } from "../../middlewares/auth.middleware.js"
-
+import { loginRateLimiter,refreshRateLimiter } from "../../middlewares/rateLimiter.js"
 
 const router=express.Router()
 
 
 router.post("/signup",ValidateSchema(signupSchema),signup)
-router.post("/login",ValidateSchema(loginSchema),login)
+router.post("/login",loginRateLimiter,ValidateSchema(loginSchema),login)
 router.get("/me",authenticateUser,getUser)
-router.post("/refresh",refreshSession)
+router.post("/refresh",refreshRateLimiter,refreshSession)
 router.post("/logout",authenticateUser,logout)
 
 export default router 
