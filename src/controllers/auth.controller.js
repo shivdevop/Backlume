@@ -47,6 +47,7 @@ export const login=async(req,res)=>{
     const token=generateToken({
         id:existingUser.id,
         email:existingUser.email,
+        role:existingUser.role
     })
 
     const refreshToken=signRefreshToken({
@@ -130,3 +131,4 @@ export const logout=async(req,res)=>{
     }
 
 }
+
