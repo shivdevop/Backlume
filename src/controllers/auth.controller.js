@@ -74,10 +74,14 @@ export const login=async(req,res)=>{
 }
 
 export const getUser=async(req,res)=>{
-    const targetuser={
-        id:req.user.id,
-        email:req.user.email,
+    const targetUserId=req.user.id
+
+    const targetuser=await findUserById(targetUserId)
+
+    if(!targetuser){
+        return error(res,"User not found",404)
     }
+
     return success(res,targetuser)
 }
 

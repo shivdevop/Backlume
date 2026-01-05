@@ -1,4 +1,5 @@
 import {pool} from "../config/db.js"
+import { redisClient } from "../config/redis.js"
 
 export const createUser=async(email,hashedPassword)=>{
 
@@ -20,6 +21,24 @@ export const updateRefreshToken=async(userId,refreshToken)=>{
 }
 
 export const findUserById=async(userId)=>{
+    const cacheKey=`user:profile:v1:${userId}`
+
+    //try redis for finding the user 
+    const cachedUser=await redisClient.get(cacheKey)
+    if(cachedUser){
+        console.log("user found in redis")
+        return JSON.parse(cachedUser)
+    }
+
+    //fetch from db
     const {rows}=await pool.query(`SELECT * FROM users where id=$1`,[userId])
-    return rows[0]
+    const user=rows[0]
+    if(!user){
+        return null
+    }
+    console.log("user not found in redis, fetching from db")
+    //cache the user in redis for 10 minutes
+    await redisClient.setEx(cacheKey,600,JSON.stringify(user))
+    console.log("user cached in redis")
+    return user
 }
