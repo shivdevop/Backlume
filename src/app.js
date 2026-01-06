@@ -1,20 +1,25 @@
 import express from "express"
-import routes from "./routes/index.js"
+import {createRoutes} from "./routes/index.js"
 
-const app=express()
 
-//global middlewares
-app.use(express.json())
+export const createApp=()=>{
+    const app=express()
 
-app.get("/health",(req,res)=>{
-    res.send({
-        status:"ok",
-        service:"backlume"
+    //global middlewares
+    app.use(express.json())
+    
+    app.get("/health",(req,res)=>{
+        res.send({
+            status:"ok",
+            service:"backlume"
+        })
     })
-})
+    
+    app.use("/api",createRoutes())
+    return app
+}
 
-app.use("/api",routes)
 
-export default app
+
 
 

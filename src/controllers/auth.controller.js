@@ -2,6 +2,7 @@ import { success,error } from "../utils/response.js"
 import { createUser,findUserByEmail, updateRefreshToken, findUserById } from "../db/user.queries.js"
 import brcypt from "bcrypt"
 import { generateToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
+import { redisClient } from "../config/redis.js"
 
 const SALT_ROUNDS=6
 
@@ -126,7 +127,11 @@ export const logout=async(req,res)=>{
         //user should be logged in and authenticated to log out 
         const userId=req.user.id
         await updateRefreshToken(userId,null)
-    
+
+        //clear the user from redis; invalidate cached profile 
+        await redisClient.del(`user:profile:v1:${userId}`)
+        console.log("user profile invalidated from redis")
+
         return success(res,{
             message:"Logged out successfully"
         })
