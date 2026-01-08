@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/shivdevop/Backlume#readme",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.4",
     "dotenv": "^17.2.3",
