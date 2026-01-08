@@ -3,6 +3,8 @@ import { createUser,findUserByEmail, updateRefreshToken, findUserById } from "..
 import brcypt from "bcrypt"
 import { generateToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js"
 import { redisClient } from "../config/redis.js"
+import { publishUserSignupEvent } from "../producers/user.producer.js"
+import { tryCatch } from "bullmq"
 
 const SALT_ROUNDS=6
 
@@ -23,6 +25,15 @@ export const signup =async(req,res)=>{
     if(!newUser){
         return error(res,"Failed to create user",500)
     }
+
+    //publish user signup event
+    try {
+        await publishUserSignupEvent({userId:newUser.id,email:newUser.email})
+    } catch (err) {
+        console.error("Error publishing user signup event",err)
+        //continue with user creation even if event publishing fails
+    }
+    
 
     return success(res,newUser)
 
