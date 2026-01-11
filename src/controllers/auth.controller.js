@@ -5,37 +5,22 @@ import { generateToken, signRefreshToken, verifyRefreshToken } from "../utils/jw
 import { redisClient } from "../config/redis.js"
 import { publishUserSignupEvent } from "../producers/user.producer.js"
 import { tryCatch } from "bullmq"
+import { signupUser } from "../services/auth.service.js"
 
-const SALT_ROUNDS=6
+
 
 export const signup =async(req,res)=>{
 
-    //we want to create new user and the input payload validation will already be done in the route 
+    //we want to create new user and the input payload validation will already be done in the route
 
-    // we will try to find if the user already exists
-    const {email,password}=req.body
-    const existingUser=await findUserByEmail(email)
-    if(existingUser){
-        return error(res,"User already exists",400)
-    }
-
-    //if user doesnt exist, we create a new user .. first hash the password 
-    const hashedPassword=await brcypt.hash(password,SALT_ROUNDS)
-    const newUser=await createUser(email,hashedPassword)
-    if(!newUser){
-        return error(res,"Failed to create user",500)
-    }
-
-    //publish user signup event
     try {
-        await publishUserSignupEvent({userId:newUser.id,email:newUser.email})
+        const {email,password}=req.body
+        const newUser=await signupUser({email,password})
+        return success(res,newUser) 
     } catch (err) {
-        console.error("Error publishing user signup event",err)
-        //continue with user creation even if event publishing fails
-    }
-    
 
-    return success(res,newUser)
+        return error(res,err.message,400)
+    }
 
 }
 
