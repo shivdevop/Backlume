@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: backlume-api
+    command: node src/server.js
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # Override for Docker networking - use service names instead of localhost
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/backlume
+    depends_on:
+      - postgres
+      - redis
+
+  email-worker: 
+    build: .
+    container_name: backlume-email-worker
+    command: node src/workers/email.worker.js
+    env_file:
+      - .env
+    environment:
+      # Override for Docker networking - use service names instead of localhost
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+
+  audit-worker:
+    build: .
+    container_name: backlume-audit-worker
+    command: node src/workers/audit.worker.js
+    env_file:
+      - .env
+    environment:
+      # Override for Docker networking - use service names instead of localhost
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+
+  postgres:
+    image: postgres:16
+    container_name: postgres-backlume
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backlume
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+    
+
+  redis:
+    image: redis:7
+    container_name: redis-backlume
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+
+
+  
