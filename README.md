@@ -1,4 +1,4 @@
-# Backlume API
+# Backlume 
 
 A modern, scalable Node.js backend API built with Express, featuring authentication, rate limiting, background job processing, and Redis caching.
 
